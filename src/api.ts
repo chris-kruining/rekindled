@@ -2,7 +2,8 @@ import { SourceMap } from 'module';
 import { readFile, stat } from 'fs/promises';
 import remixPackage from '@remix-run/react/package.json';
 
-export type Meta = Record<string, { version: string, docs: string }>
+export type MetaItem = { version: string, docs: string };
+export type Meta = Record<string, MetaItem>
 
 type FrameProps = Partial<{
     name: string,
