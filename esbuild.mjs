@@ -1,13 +1,14 @@
 import { build } from 'esbuild';
 
 await build({
-    entryPoints: [ 'src/index.tsx' ],
+    entryPoints: [ 'src/index.ts' ],
     outdir: 'lib',
     outbase: 'src',
-    bundle: false,
+    bundle: true,
     sourcemap: true,
     minify: false,
     format: 'cjs',
     platform: 'node',
+    external: [ 'react', 'react-dom', '@remix-run/node', '@remix-run/react' ],
     target: [ 'esnext' ],
 });

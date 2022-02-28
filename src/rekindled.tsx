@@ -1,144 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from '@remix-run/react';
-import { stat, readFile } from 'fs/promises';
-import { SourceMap } from 'module';
-import remixPackage from '@remix-run/react/package.json';
-
-type FrameProps = Partial<{
-    name: string,
-    code: string,
-    anonymous: '<anonymous>',
-    file: string,
-    line: string|number,
-    start: number|undefined,
-    end: number|undefined,
-    column: string|number
-}>;
-
-export class Frame
-{
-    readonly name: string;
-    readonly code: string;
-    readonly file: string;
-    readonly line: number;
-    readonly start?: number;
-    readonly end?: number;
-    readonly column: number;
-
-    constructor({ name, code, anonymous, file, line, start, end, column }: FrameProps)
-    {
-        this.name = name ?? '';
-        this.code = code ?? '';
-        this.file = anonymous ?? file ?? '';
-        this.line = Number(line ?? '');
-        this.start = start;
-        this.end = end;
-        this.column = Number(column ?? '');
-    }
-
-    static from(line: string): Frame|undefined
-    {
-        const match = line.match(/^\s*at (?<name>[^(]+) \((?:(?<anonymous><anonymous>)|(?<file>.+):(?<line>\d+):(?<column>\d+))\)$/)?.groups;
-
-        return match !== undefined
-            ? new Frame(match)
-            : undefined;
-    }
-}
-
-async function getTrace(error: Error): Promise<Frame[]>
-{
-    const frames: Frame[] = error.stack?.split('\n').slice(1).map(f => Frame.from(f)).filter((f: Frame|undefined): f is Frame => f !== undefined) ?? [];
-
-    return Promise.all(frames.map(async f => {
-        if(f.file === '')
-        {
-            return f;
-        }
-
-        const content = await getFile(f.file);
-
-        if(content === undefined || content.includes('//# sourceMappingURL=') === false)
-        {
-            const [ snippet, start, end ] = getCodeSnippet(content ?? '', f.line);
-            return new Frame({ ...f, code: snippet, start, end });
-        }
-
-        const key = '//# sourceMappingURL=data:application/json;base64,';
-        const startUrl = content.lastIndexOf(key) + key.length;
-        const endUrl = content.indexOf('\n', startUrl);
-        const sourcemap = new SourceMap(
-            JSON.parse(Buffer.from(content.slice(startUrl, endUrl).toString(), 'base64url').toString())
-        );
-
-        const entry = sourcemap.findEntry(f.line, f.column);
-        const fileContent = sourcemap.payload.sourcesContent[sourcemap.payload.sources.indexOf(entry.originalSource)];
-        const [ snippet, start, end ] = getCodeSnippet(fileContent, entry.originalLine);
-
-        const frame = new Frame({
-            code: snippet,
-            start,
-            end,
-            file: entry.originalSource,
-            line: entry.originalLine,
-            column: entry.originalColumn,
-        });
-
-        return frame;
-    }));
-}
-
-function getCodeSnippet(fileContent: Buffer|string, line: number, column?: number): [ string, number, number ]
-{
-    if(fileContent instanceof Buffer)
-    {
-        fileContent = fileContent.toString();
-    }
-
-    const lines = fileContent.split('\n');
-    const start = Math.max(line - 10, 0);
-    const end = Math.min(line + 10, lines.length)
-
-    return [
-        lines.slice(start, end).join('\n'),
-        start,
-        end,
-    ];
-}
-
-const files: Map<string, Buffer> = new Map;
-async function getFile(path: string): Promise<Buffer|undefined>
-{
-    if(files.has(path) === false)
-    {
-        const header = await stat(path);
-
-        if(header.isFile() === false)
-        {
-            return;
-        }
-
-        files.set(path, await readFile(path));
-    }
-
-    return files.get(path);
-}
-
-type Meta = Record<string, { version: string, docs: string }>
-
-export async function loader()
-{
-    const error = new Error('Test Error');
-    // ^^^ Still need to get the error from somewhere
-
-    return {
-        meta: {
-            NodeJS: { version: process.version, docs: 'https://nodejs.org/api/' },
-            Remix: { version: remixPackage.version, docs: 'https://remix.run/docs' },
-        },
-        trace: await getTrace(error),
-    };
-}
+import { Frame, Meta } from './api.js';
 
 const style = `
 .rekindled {
@@ -289,14 +151,24 @@ const style = `
 }
 `;
 
-export function Rekindled({ error }: { error: Error })
+export function Rekindled({ traceEndpoint, error }: { traceEndpoint: string, error: Error })
 {
-    const meta: Meta = {};
-    const trace: Frame[] = [];
+    const [ meta, setMeta ] = useState<Meta>({});
+    const [ trace, setTrace ] = useState<Frame[]>([]);
 
-    // useEffect(() => {
-    //     getTrace(error).then(trace => console.log(trace));
-    // }, [ error ]);
+    useEffect(() => {
+        fetch(traceEndpoint, { body: JSON.stringify(error) }).then(r => r.json()).then(r => {
+            const { meta, trace } = r;
+
+            console.log(meta, trace);
+
+            // setMeta(meta);
+            // setTrace(trace);
+        });
+    }, [ error ]);
+
+    // const meta: Meta = {};
+    // const trace: Frame[] = [];
 
     return <>
         <style dangerouslySetInnerHTML={{ __html: style }}/>
