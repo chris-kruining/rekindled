@@ -5,7 +5,8 @@
     "license": "MIT",
     "main": "./lib/index.js",
     "scripts": {
-        "build": "node ./esbuild.mjs && tsc"
+        "build": "node ./esbuild.mjs && tsc",
+        "test": "echo \"no tests yet\""
     },
     "peerDependencies": {
         "@remix-run/node": "1.2.2",
