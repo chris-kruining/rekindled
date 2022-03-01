@@ -1,7 +1,7 @@
 import { build } from 'esbuild';
 
 await build({
-    entryPoints: [ 'src/index.ts' ],
+    entryPoints: [ 'src/rekindled.tsx', 'src/api.server.ts' ],
     outdir: 'lib',
     outbase: 'src',
     bundle: true,

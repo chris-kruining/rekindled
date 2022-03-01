@@ -1,16 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from '@remix-run/react';
-import { Frame, Meta } from './api.js';
+import React, { PropsWithChildren, useEffect, useState } from 'react';
+import { Link, useFetcher } from '@remix-run/react';
+import { Meta, Frame, getTrace } from './api.server.js';
+import remixPackage from '@remix-run/react/package.json';
 
 const style = `
 .rekindled {
     display: grid;
+    align-content: start;
+    align-items: start;
     gap: 3em;
     padding: 1em;
     background-color: #eee;
     color: #333;
     font-size: 1rem;
     overflow-y: auto;
+    isolation: isolate;
+    contain: strict;
 }
 
 .rekindled > nav > span {
@@ -57,8 +62,7 @@ const style = `
 
 .rekindled > main {
     display: grid;
-    grid: 100% / 40% minmax(0, 1fr);
-    block-size: 70vh;
+    grid: minmax(0, 40em) / minmax(20em, min(30em, 40%)) minmax(0, 1fr);
     background-color: #fff;
     border-radius: .5em;
     box-shadow: 0 0 1em #0004;
@@ -67,6 +71,7 @@ const style = `
 
 .rekindled > main > nav {
     display: grid;
+    align-content: start;
     padding-block: 2em;
     overflow-y: auto;
 }
@@ -85,6 +90,7 @@ const style = `
 
 .rekindled > main > .preview {
     display: grid;
+    grid-template-columns: 100%;
     grid-auto-flow: row;
     grid-auto-rows: 100%;
     background-color: #00000008;
@@ -99,6 +105,11 @@ const style = `
     padding-block: 1em;
 }
 
+.rekindled > main > .preview > .frame {
+    display: grid;
+    padding-inline-end: 1em;
+}
+
 .rekindled > main > .preview > .frame > header {
     text-align: right;
     font-weight: 900;
@@ -109,7 +120,8 @@ const style = `
 .rekindled > main > .preview > .frame > .code {
     display: flex;
     flex-flow: column;
-    white-space: pre-wrap;
+    white-space: pre;
+    overflow: auto;
 }
 
 .rekindled > main > .preview > .frame > .code code {
@@ -129,11 +141,11 @@ const style = `
 }
 
 .rekindled > main > .preview > .frame > .code code.current {
-    font-weight: bold;
     background-color: hsla(10 75% 50% / .25);
 }
 
 .rekindled > main > .preview > .frame > .code code.current::before {
+    font-weight: 900;
     background-color: hsla(10 75% 50% / .25);
 }
 
@@ -143,6 +155,7 @@ const style = `
     box-shadow: 0 0 1em #0004;
     padding: 2em;
     background: hsla(10 75% 50% / .25);
+    overflow-x: auto;
 }
 
 .rekindled > footer > strong {
@@ -151,32 +164,48 @@ const style = `
 }
 `;
 
-export function Rekindled({ traceEndpoint, error }: { traceEndpoint: string, error: Error })
+export function Rekindled({ traceEndpoint, error, children }: PropsWithChildren<{ traceEndpoint: string, error: Error }>)
 {
-    const [ meta, setMeta ] = useState<Meta>({});
-    const [ trace, setTrace ] = useState<Frame[]>([]);
+    if(process.env.NODE_ENV !== 'development')
+    {
+        return children;
+    }
+
+    const fetcher = useFetcher();
+    const [ report, setReport ] = useState<{ meta: Meta, trace: Frame[] }|undefined>(undefined);
 
     useEffect(() => {
-        fetch(traceEndpoint, { body: JSON.stringify(error) }).then(r => r.json()).then(r => {
-            const { meta, trace } = r;
+        if(fetcher.state === 'idle' && fetcher.type !== 'done')
+        {
+            fetcher.load(`${traceEndpoint}?error=${encodeURIComponent(JSON.stringify({ stack: error.stack }))}`);
+        }
+    }, []);
 
-            console.log(meta, trace);
-
-            // setMeta(meta);
-            // setTrace(trace);
-        });
-    }, [ error ]);
-
-    // const meta: Meta = {};
-    // const trace: Frame[] = [];
+    if(!report)
+    {
+        if(typeof window === 'undefined')
+        {
+            setReport({
+                meta: {
+                    NodeJS: { version: process.version, docs: 'https://nodejs.org/api/' },
+                    Remix: { version: remixPackage.version, docs: 'https://remix.run/docs' },
+                },
+                trace: getTrace(error),
+            });
+        }
+        else if(fetcher.data)
+        {
+            setReport(fetcher.data);
+        }
+    }
 
     return <>
         <style dangerouslySetInnerHTML={{ __html: style }}/>
 
         <div className="rekindled">
             <nav>
-                {Object.entries(meta).map(([ app, { version, docs } ]) =>
-                    <span>{app} {version} <a target="_blank" href={docs}>docs</a></span>
+                {Object.entries(report?.meta ?? {}).map(([ app, { version, docs } ], i: number) =>
+                    <span key={i}>{app} {version} <a target="_blank" href={docs}>docs</a></span>
                 )}
             </nav>
 
@@ -194,7 +223,7 @@ export function Rekindled({ traceEndpoint, error }: { traceEndpoint: string, err
 
             <main>
                 <nav>
-                    {trace.map((frame: Frame, i) =>
+                    {report?.trace.map((frame: Frame, i: number) =>
                         <Link to={`#frame-${i}`} replace={true} key={i}>
                             <p>
                                 <strong>{frame.file}</strong> on line <span>{frame.line}</span>
@@ -206,17 +235,17 @@ export function Rekindled({ traceEndpoint, error }: { traceEndpoint: string, err
                 </nav>
 
                 <div className="preview">
-                    {trace.map((frame: Frame, i: number) =>
-                        <div className="frame" id={`frame-${i}`}>
+                    {report?.trace.map((frame: Frame, i: number) =>
+                        <div className="frame" id={`frame-${i}`} key={i}>
                             <header>{frame.file}</header>
 
                             <pre key={i} className="code">
-                            {frame.code.split('\n').map((line, i) => {
-                                const currentLine = frame.start! + i
+                                {frame.code.split('\n').map((line: string, i: number) => {
+                                    const currentLine = frame.start! + i + 1;
 
-                                return <code data-line={currentLine} className={currentLine === frame.line ? 'current' : ''}>{line}</code>;
-                            })}
-                        </pre>
+                                    return <code data-line={currentLine} className={currentLine === frame.line ? 'current' : ''} key={i}>{line}</code>;
+                                })}
+                            </pre>
                         </div>
                     )}
                 </div>
