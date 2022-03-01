@@ -136,11 +136,13 @@ function getFile(path: string): Buffer|undefined
 
 export async function rekindle(error: Error): Promise<{ meta: Meta, trace: Frame[] }>
 {
-    return {
-        meta: {
-            NodeJS: { version: process.version, docs: 'https://nodejs.org/api/' },
-            Remix: { version: remixPackage.version, docs: 'https://remix.run/docs' },
-        },
-        trace: getTrace(error),
-    };
+    return process.env.NODE_ENV === 'development'
+        ? {
+            meta: {
+                NodeJS: { version: process.version, docs: 'https://nodejs.org/api/' },
+                Remix: { version: remixPackage.version, docs: 'https://remix.run/docs' },
+            },
+            trace: getTrace(error),
+        }
+        : { meta: {}, trace: [] };
 }
