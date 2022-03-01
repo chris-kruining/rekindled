@@ -1,14 +1,26 @@
-import React, { PropsWithChildren, useEffect, useState } from 'react';
+import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom'
 import { Link, useFetcher } from '@remix-run/react';
 import { Meta, Frame, getTrace } from './api.server.js';
 import remixPackage from '@remix-run/react/package.json';
 
 const style = `
+.rekindled-open {
+    position: fixed;
+    inset-inline-end: 2em;
+    inset-block-end: 2em;
+    z-index: 100;
+}
+
 .rekindled {
+    position: fixed;
+    inset: 0;
     display: grid;
     align-content: start;
     align-items: start;
     gap: 3em;
+    block-size: 100vh;
+    inline-size: 100vw;
     padding: 1em;
     background-color: #eee;
     color: #333;
@@ -16,6 +28,20 @@ const style = `
     overflow-y: auto;
     isolation: isolate;
     contain: strict;
+    box-sizing: border-box;
+    z-index: 101;
+}
+
+.rekindled:not([open]) {
+    display: none;
+}
+
+.rekindled > nav {
+    display: flex;
+}
+
+.rekindled > nav > button {
+    margin-inline-end: 1em;
 }
 
 .rekindled > nav > span {
@@ -164,7 +190,7 @@ const style = `
 }
 `;
 
-export function Rekindled({ traceEndpoint, error, children }: PropsWithChildren<{ traceEndpoint: string, error: Error }>)
+export function Rekindled({ shown = false, traceEndpoint, error, children }: PropsWithChildren<{ shown?: boolean, traceEndpoint: string, error: Error }>)
 {
     if(process.env.NODE_ENV !== 'development')
     {
@@ -199,63 +225,79 @@ export function Rekindled({ traceEndpoint, error, children }: PropsWithChildren<
         }
     }
 
+    const rekindled = useRef<HTMLDialogElement>(null);
+    const show = () => {
+        rekindled.current?.setAttribute('open', '');
+    };
+    const hide = () => {
+        rekindled.current?.removeAttribute('open');
+    };
+
     return <>
-        <style dangerouslySetInnerHTML={{ __html: style }}/>
+        { typeof document !== 'undefined' && createPortal(<>
+            <style dangerouslySetInnerHTML={{ __html: style }}/>
 
-        <div className="rekindled">
-            <nav>
-                {Object.entries(report?.meta ?? {}).map(([ app, { version, docs } ], i: number) =>
-                    <span key={i}>{app} {version} <a target="_blank" href={docs}>docs</a></span>
-                )}
-            </nav>
+            <button className="rekindled-open" onClick={show}>Rekindled</button>
 
-            <header>
-                <main>
-                    <strong>{error.name}</strong>
-
-                    <h1>{error.message}</h1>
-                </main>
-
-                <aside className="solution">
-                    some solution
-                </aside>
-            </header>
-
-            <main>
+            <dialog ref={rekindled} className="rekindled" open={shown}>
                 <nav>
-                    {report?.trace.map((frame: Frame, i: number) =>
-                        <Link to={`#frame-${i}`} replace={true} key={i}>
-                            <p>
-                                <strong>{frame.file}</strong> on line <span>{frame.line}</span>
-                            </p>
+                    <button onClick={hide}>Close</button>
 
-                            <span>{frame.name}</span>
-                        </Link>
+                    {Object.entries(report?.meta ?? {}).map(([ app, { version, docs } ], i: number) =>
+                        <span key={i}>{app} {version} <a target="_blank" href={docs}>docs</a></span>
                     )}
                 </nav>
 
-                <div className="preview">
-                    {report?.trace.map((frame: Frame, i: number) =>
-                        <div className="frame" id={`frame-${i}`} key={i}>
-                            <header>{frame.file}</header>
+                <header>
+                    <main>
+                        <strong>{error.name}</strong>
 
-                            <pre key={i} className="code">
+                        <h1>{error.message}</h1>
+                    </main>
+
+                    <aside className="solution">
+                        some solution
+                    </aside>
+                </header>
+
+                <main>
+                    <nav>
+                        {report?.trace.map((frame: Frame, i: number) =>
+                            <Link to={`#frame-${i}`} replace={true} key={i}>
+                                <p>
+                                    <strong>{frame.file}</strong> on line <span>{frame.line}</span>
+                                </p>
+
+                                <span>{frame.name}</span>
+                            </Link>
+                        )}
+                    </nav>
+
+                    <div className="preview">
+                        {report?.trace.map((frame: Frame, i: number) =>
+                            <div className="frame" id={`frame-${i}`} key={i}>
+                                <header>{frame.file}</header>
+
+                                <pre key={i} className="code">
                                 {frame.code.split('\n').map((line: string, i: number) => {
                                     const currentLine = frame.start! + i + 1;
 
                                     return <code data-line={currentLine} className={currentLine === frame.line ? 'current' : ''} key={i}>{line}</code>;
                                 })}
                             </pre>
-                        </div>
-                    )}
-                </div>
-            </main>
+                            </div>
+                        )}
+                    </div>
+                </main>
 
-            <footer>
-                <strong>Raw error:</strong>
+                <footer>
+                    <strong>Raw error:</strong>
 
-                <pre>{error.stack}</pre>
-            </footer>
-        </div>
-    </>
+                    <pre>{error.stack}</pre>
+                </footer>
+            </dialog>
+        </>, document.body) }
+
+        {children}
+    </>;
 }
