@@ -60,6 +60,13 @@ export const loader: LoaderFunction = async ({ request }) => {
 
 ![preview][1]
 
+### Options
+| option        | type      | default value           | Description                                                            |
+|---------------|-----------|-------------------------|------------------------------------------------------------------------|
+| traceEndpoint | `string`  | none, field is required | Route to the endpoint where you have loader that returns `rekindle`    |
+| error         | `Error`   | none, field is required | The error to be handled by Rekindled                                   |
+| shown         | `boolean` | `false`                 | This option handles if the Rekindled dialog should be shown by default |
+
 
 
 # TODO
