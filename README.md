@@ -9,6 +9,13 @@ You then often end up on stack overflow, a github issue, or maybe an FAQ.
 
 Solutions try to resolve this. Where you propose a solution -if applicable- at the same time you throw the error. 
 
+## Freatures:
+
+- Works without JS (uses JS solely for progressively enhancing the experience)
+- development environment only, in production the children passed into `Rekindled` are rendered
+- Solutions (is a to-do)
+- Pretty and interactive console and terminal experiences (as a to-do)
+
 ## Installation
 
 `npm i @fyn-software/rekindled`
