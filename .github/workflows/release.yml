@@ -29,7 +29,7 @@ jobs:
         run: npm run build
 
       - name: Store project in cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: restore-build
         with:
           path: './*'
@@ -46,7 +46,7 @@ jobs:
         protoc_version: [ 3.x ]
     steps:
       - name: Load project from cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: restore-build
         with:
           path: './*'
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Load project from cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: restore-build
         with:
           path: './*'

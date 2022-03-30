@@ -22,17 +22,17 @@
         "error-stack-parser": "^2.0.7"
     },
     "peerDependencies": {
-        "@remix-run/node": "1.2.3",
-        "@remix-run/react": "1.2.3",
+        "@remix-run/node": "1.3.3",
+        "@remix-run/react": "1.3.3",
         "react": "17.0.2",
         "react-dom": "17.0.2"
     },
     "devDependencies": {
         "@types/node": "17.0.21",
-        "@types/react": "17.0.40",
-        "@types/react-dom": "17.0.13",
-        "esbuild": "0.14.25",
-        "typescript": "4.6.2"
+        "@types/react": "17.0.43",
+        "@types/react-dom": "17.0.14",
+        "esbuild": "0.14.28",
+        "typescript": "4.6.3"
     },
     "engines": {
         "node": ">=14"
