@@ -18,6 +18,9 @@
         "build": "node ./esbuild.mjs && tsc",
         "test": "echo \"no tests yet\""
     },
+    "dependencies": {
+        "error-stack-parser": "^2.0.7"
+    },
     "peerDependencies": {
         "@remix-run/node": "1.2.3",
         "@remix-run/react": "1.2.3",
@@ -33,8 +36,5 @@
     },
     "engines": {
         "node": ">=14"
-    },
-    "dependencies": {
-        "error-stack-parser": "^2.0.7"
     }
 }
