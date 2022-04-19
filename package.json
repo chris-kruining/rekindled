@@ -23,7 +23,7 @@
     },
     "peerDependencies": {
         "@remix-run/node": "1.4.0",
-        "@remix-run/react": "1.4.0",
+        "@remix-run/react": "1.4.1",
         "react": "18.0.0",
         "react-dom": "18.0.0"
     },
