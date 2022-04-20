@@ -3,6 +3,10 @@
     "version": "0.0.1",
     "description": "Beautiful errors for Remix, both in browser and console",
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/FYN-Software/rekindled"
+    },
     "main": "./lib/rekindled.js",
     "exports": {
         ".": {
