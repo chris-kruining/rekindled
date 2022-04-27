@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
+import React, { PropsWithChildren, useEffect, useRef, useState, ReactElement } from 'react';
 import { createPortal } from 'react-dom'
 import { Link, useFetcher } from '@remix-run/react';
 import { Meta, Frame, getTrace } from './api.server.js';
@@ -190,11 +190,11 @@ const style = `
 }
 `;
 
-export function Rekindled({ shown = false, traceEndpoint, error, children }: PropsWithChildren<{ shown?: boolean, traceEndpoint: string, error: Error }>)
+export function Rekindled({ shown = false, traceEndpoint, error, children }: PropsWithChildren<{ shown?: boolean, traceEndpoint: string, error: Error }>): ReactElement
 {
     if(process.env.NODE_ENV !== 'development')
     {
-        return children;
+        return <>{children}</>;
     }
 
     const fetcher = useFetcher();
