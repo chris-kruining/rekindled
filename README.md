@@ -18,7 +18,7 @@ Solutions try to resolve this. Where you propose a solution -if applicable- at t
 
 ## Installation
 
-`npm i @fyn-software/rekindled`
+`npm i @kruining/rekindled`
 
 
 
@@ -29,7 +29,7 @@ Setting up Rekindled is as easy as:
 ### 1. Wrap your error boundary's element.
 `/app/routes/root.tsx`
 ```tsx
-import { Rekindled } from '@fyn-software/rekindled';
+import { Rekindled } from '@kruining/rekindled';
 
 export function ErrorBoundary({ error }: { error: Error })
 {
@@ -47,7 +47,7 @@ export function ErrorBoundary({ error }: { error: Error })
 
 ```ts
 import { LoaderFunction } from 'remix';
-import { rekindle } from '@fyn-software/rekindled/api.server.js';
+import { rekindle } from '@kruining/rekindled/api.server.js';
 
 export const loader: LoaderFunction = async ({ request }) => {
     const error = JSON.parse(decodeURIComponent(new URL(request.url).searchParams.get('error')!));
