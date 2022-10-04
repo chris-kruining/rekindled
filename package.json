@@ -1,5 +1,5 @@
 {
-    "name": "@fyn-software/rekindled",
+    "name": "@kruining/rekindled",
     "version": "0.0.1",
     "description": "Beautiful errors for Remix, both in browser and console",
     "license": "MIT",
