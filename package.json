@@ -34,7 +34,7 @@
     "devDependencies": {
         "@types/node": "18.16.0",
         "@types/react": "18.2.0",
-        "@types/react-dom": "18.2.0",
+        "@types/react-dom": "18.2.1",
         "esbuild": "0.17.18",
         "typescript": "5.0.4"
     },
