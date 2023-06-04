@@ -93,7 +93,7 @@ jobs:
 
       - name: Create Changelog
         id: changelog
-        uses: mikepenz/release-changelog-builder-action@v3
+        uses: mikepenz/release-changelog-builder-action@v4
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
