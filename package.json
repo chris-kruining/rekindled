@@ -35,7 +35,7 @@
         "@types/node": "18.17.4",
         "@types/react": "18.2.17",
         "@types/react-dom": "18.2.7",
-        "esbuild": "0.19.0",
+        "esbuild": "0.19.1",
         "typescript": "5.1.6"
     },
     "engines": {
